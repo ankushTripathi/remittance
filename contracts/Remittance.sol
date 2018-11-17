@@ -4,31 +4,40 @@ contract Remittance {
     
     struct Payment{
 
-        address alice;
-        address carol;
         uint amount;
-        bytes32 secureHash;
+        bool exists;
     }
 
-    Payment[] payments;
+    mapping(bytes32 => Payment) payments;
 
-    function deposit(address _carol,bytes32 _hash) public payable returns(uint){
+    event LogNewDeposit(bytes32 indexed _hash, address indexed alice, uint amount);
+    event LogWithdrawAmount(bytes32 indexed _hash,address indexed carol, uint amount);
+
+    function deposit(bytes32 _hash) public payable{
 
         require(msg.value > 0);
+        require(payments[_hash].exists == false);
 
-        payments.push(Payment(msg.sender,_carol,msg.value,_hash));
-        return payments.length-1;
+        emit LogNewDeposit(_hash, msg.sender, msg.value);
+
+        payments[_hash] = Payment({
+            amount : msg.value,
+            exists : true
+        });
     }
 
-    function withdraw(uint payment_id,string password1,string password2) public {
+    function withdraw(string password) public {
 
-        require(payment_id < payments.length);
-        Payment memory pay = payments[payment_id];
-        require(pay.carol == msg.sender);
-        require(pay.secureHash == keccak256(abi.encodePacked(pay.alice,pay.carol,password1,password2)));
+        bytes32 payment_hash  = keccak256(abi.encodePacked(msg.sender,password));
+
+        Payment storage pay = payments[payment_hash];
+        require(pay.exists == true);
+
         uint amount = pay.amount;
         require(amount > 0);
+        
         pay.amount = 0;
+        emit LogWithdrawAmount(payment_hash,msg.sender,amount);
         msg.sender.transfer(amount);
     }
 }
