@@ -2,25 +2,25 @@ pragma solidity ^0.4.23;
 
 contract Remittance {
     
-    struct Payment{
+    struct PaymentStruct{
 
         uint amount;
         bool exists;
     }
 
-    mapping(bytes32 => Payment) payments;
+    mapping(bytes32 => PaymentStruct) paymentStructs;
 
-    event LogNewDeposit(bytes32 indexed _hash, address indexed alice, uint amount);
-    event LogWithdrawAmount(bytes32 indexed _hash,address indexed carol, uint amount);
+    event LogFundsDeposited(bytes32 indexed _hash, address indexed alice, uint amount);
+    event LogFundsWithdrawn(bytes32 indexed _hash,address indexed carol, uint amount);
 
     function deposit(bytes32 _hash) public payable{
 
         require(msg.value > 0);
-        require(payments[_hash].exists == false);
+        require(!paymentStructs[_hash].exists);
 
-        emit LogNewDeposit(_hash, msg.sender, msg.value);
+        emit LogFundsDeposited(_hash, msg.sender, msg.value);
 
-        payments[_hash] = Payment({
+        paymentStructs[_hash] = PaymentStruct({
             amount : msg.value,
             exists : true
         });
@@ -30,14 +30,14 @@ contract Remittance {
 
         bytes32 payment_hash  = keccak256(abi.encodePacked(msg.sender,password));
 
-        Payment storage pay = payments[payment_hash];
+        PaymentStruct storage pay = paymentStructs[payment_hash];
         require(pay.exists == true);
 
         uint amount = pay.amount;
         require(amount > 0);
         
         pay.amount = 0;
-        emit LogWithdrawAmount(payment_hash,msg.sender,amount);
+        emit LogFundsWithdrawn(payment_hash,msg.sender,amount);
         msg.sender.transfer(amount);
     }
 }
