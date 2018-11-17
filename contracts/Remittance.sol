@@ -13,6 +13,12 @@ contract Remittance {
     event LogFundsDeposited(bytes32 indexed _hash, address indexed alice, uint amount);
     event LogFundsWithdrawn(bytes32 indexed _hash,address indexed carol, uint amount);
 
+
+    function hashing(address a,string b) public pure returns(bytes32){
+        
+        return keccak256(abi.encodePacked(a,b));
+    }
+
     function deposit(bytes32 _hash) public payable{
 
         require(msg.value > 0);
