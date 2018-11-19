@@ -14,9 +14,9 @@ contract Remittance {
     event LogFundsWithdrawn(bytes32 indexed _hash,address indexed carol, uint amount);
 
 
-    function hashing(address a,string b) public pure returns(bytes32){
+    function hashing(address a,bytes32 b) public view returns(bytes32){
         
-        return keccak256(abi.encodePacked(a,b));
+        return keccak256(abi.encodePacked(a,b,address(this)));
     }
 
     function deposit(bytes32 _hash) public payable{
@@ -32,12 +32,11 @@ contract Remittance {
         });
     }
 
-    function withdraw(string password) public {
+    function withdraw(bytes32 password) public {
 
-        bytes32 payment_hash  = keccak256(abi.encodePacked(msg.sender,password));
+        bytes32 payment_hash  = keccak256(abi.encodePacked(msg.sender,password,address(this)));
 
         PaymentStruct storage pay = paymentStructs[payment_hash];
-        require(pay.exists == true);
 
         uint amount = pay.amount;
         require(amount > 0);
